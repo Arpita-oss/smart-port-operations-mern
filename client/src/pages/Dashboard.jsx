@@ -18,6 +18,26 @@ export default function Dashboard() {
     fetchSummary();
   }, []);
 
+  const downloadCSV = (filename, rows) => {
+    if (!rows || rows.length === 0) {
+      alert('No data available to export');
+      return;
+    }
+    const headers = Object.keys(rows[0]).join(',');
+    const csvContent = [
+      headers,
+      ...rows.map((r) => Object.values(r).map((v) => `"${v ?? ''}"`).join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.setAttribute('download', filename);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   if (!data) return <div className="card">Loading port analytics...</div>;
 
   const containerChartData = [
@@ -104,7 +124,26 @@ export default function Dashboard() {
       {/* Pending Pickup Report & Gate Activity Report */}
       <div className="grid-2">
         <div className="card">
-          <h3>⏳ Pending Pickup Report (Ready for Dispatch)</h3>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+            <h3>⏳ Pending Pickup Report</h3>
+            <button
+              className="btn btn-sm"
+              onClick={() =>
+                downloadCSV(
+                  'pending_pickups.csv',
+                  data.pendingPickups.map((c) => ({
+                    ContainerNumber: c.containerNumber,
+                    Cargo: c.cargoDetails,
+                    YardSlot: c.yardSlotId?.slotCode || 'Unassigned',
+                    GateApproved: c.gateApproved ? 'Yes' : 'No'
+                  }))
+                )
+              }
+            >
+              ⬇️ Export CSV
+            </button>
+          </div>
+
           {data.pendingPickups.length === 0 ? (
             <p style={{ color: '#64748b', marginTop: '0.5rem' }}>No containers waiting for pickup.</p>
           ) : (
@@ -132,7 +171,27 @@ export default function Dashboard() {
         </div>
 
         <div className="card">
-          <h3>🚛 Daily Gate Activity Report</h3>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+            <h3>🚛 Daily Gate Activity Report</h3>
+            <button
+              className="btn btn-sm"
+              onClick={() =>
+                downloadCSV(
+                  'gate_activity.csv',
+                  data.gateStats.recentTransactions.map((t) => ({
+                    TruckNumber: t.truckId?.truckNumber,
+                    Container: t.containerId?.containerNumber || 'None',
+                    Status: t.status,
+                    GateInTime: new Date(t.gateInTime).toLocaleString(),
+                    GateOutTime: t.gateOutTime ? new Date(t.gateOutTime).toLocaleString() : 'Inside Port'
+                  }))
+                )
+              }
+            >
+              ⬇️ Export CSV
+            </button>
+          </div>
+
           {data.gateStats.recentTransactions.length === 0 ? (
             <p style={{ color: '#64748b', marginTop: '0.5rem' }}>No truck gate movements logged yet.</p>
           ) : (

@@ -6,6 +6,7 @@ import Vessels from './pages/Vessels';
 import Containers from './pages/Containers';
 import YardOps from './pages/YardOps';
 import GateOps from './pages/GateOps';
+import Profile from './pages/Profile';
 
 export default function App() {
   const [user, setUser] = useState(() => {
@@ -71,6 +72,10 @@ export default function App() {
           </button>
         )}
 
+        <button className={`nav-btn ${activeTab === 'profile' ? 'active' : ''}`} onClick={() => setActiveTab('profile')}>
+          👤 My Profile
+        </button>
+
         <button className="logout-btn" onClick={handleLogout}>Logout</button>
       </aside>
 
@@ -81,6 +86,7 @@ export default function App() {
         {activeTab === 'containers' && <Containers user={user} />}
         {activeTab === 'yard' && <YardOps />}
         {activeTab === 'gate' && <GateOps />}
+        {activeTab === 'profile' && <Profile user={user} onUpdateUser={(u) => setUser(u)} />}
       </main>
     </div>
   );
